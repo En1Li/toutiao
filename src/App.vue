@@ -1,8 +1,7 @@
 <template>
   <div>
-    <h1>黑马头条</h1>
-    <span class="toutiao toutiao-sousuo"></span>
-    <van-button type="primary">主要按钮</van-button>
+    <!-- 一级路由页面 -->
+    <router-view></router-view>
   </div>
 </template>
 
