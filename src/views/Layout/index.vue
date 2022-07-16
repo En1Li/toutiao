@@ -23,7 +23,9 @@
       <van-tabbar-item to="/profile">
         <template #icon>
           <span class="toutiao toutiao-wode"></span>
-          <span class="text">我的</span>
+          <span class="text">{{
+            !!$store.state.user.token ? '我的' : '未登录'
+          }}</span>
         </template>
       </van-tabbar-item>
     </van-tabbar>
@@ -41,11 +43,11 @@ export default {}
   align-items: center;
   justify-content: space-evenly;
   height: 100%;
-    .toutiao{
-        font-size: 0.53333rem;
-    }
-    .text{
-        font-size: 0.32rem;
-    }
+  .toutiao {
+    font-size: 0.53333rem;
+  }
+  .text {
+    font-size: 0.32rem;
+  }
 }
 </style>
