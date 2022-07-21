@@ -1,6 +1,10 @@
 <template>
   <div>
-    <van-cell v-for="(item, index) in highlightData" :key="index">
+    <van-cell
+      v-for="(item, index) in highlightData"
+      :key="index"
+      @click="checkSuggest(index)"
+    >
       <template #icon>
         <van-icon name="search" class="search-icon" />
       </template>
@@ -44,6 +48,10 @@ export default {
       } catch (error) {
         console.log(error)
       }
+    },
+    checkSuggest(index) {
+      const val = this.SearchSuggestionList[index]
+      this.$emit('checkSuggest', val)
     }
   },
   computed: {
