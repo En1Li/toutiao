@@ -51,6 +51,9 @@ export default {
       this.isShowSearchResult = true
       this.getSearchRes()
       const a = this.searchHistory.indexOf(this.value)
+      if (this.value.trim() === '') {
+        return
+      }
       if (a === -1 && this.value.trim() !== '') {
         this.searchHistory.unshift(this.value)
         storage.set('searvhHistory', this.searchHistory)

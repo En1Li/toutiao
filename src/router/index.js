@@ -17,6 +17,11 @@ const routes = [
     component: () => import('@/views/User')
   },
   {
+    name: 'article',
+    path: '/article/:id',
+    component: () => import('@/views/Article')
+  },
+  {
     path: '/',
     component: () => import('@/views/Layout'),
     redirect: '/ ',

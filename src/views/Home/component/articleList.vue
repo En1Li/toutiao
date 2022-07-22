@@ -18,6 +18,7 @@
           v-for="item in articleLists"
           :key="item.art_id"
           :artInfo="item"
+          @checkArticle="checkArticleFn(item.art_id)"
         ></articleItem>
       </van-list>
     </van-pull-refresh>
@@ -83,6 +84,16 @@ export default {
         this.loading = false
         this.refreshing = false
       }
+    },
+    checkArticleFn(id) {
+      console.log(1)
+      // this.$router.push({
+      //   name: 'article',
+      //   params: {
+      //     articleid: id
+      //   }
+      // })
+      this.$router.push('/article/' + id)
     }
   }
 }

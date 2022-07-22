@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div @click="checkArticle">
     <van-cell
       v-if="artInfo.cover.type === 0"
       :title="artInfo.title"
@@ -16,7 +16,7 @@
       <template #label>
         <div>
           <van-image
-            v-for="(item,index) in artInfo.cover.images"
+            v-for="(item, index) in artInfo.cover.images"
             :key="index"
             width="3rem"
             height="2rem"
@@ -43,6 +43,11 @@ export default {
       const data = this.artInfo
       const time = dayjs(data.pubdate).fromNow()
       return `${data.aut_name} ${data.comm_count}评论 ${time}`
+    }
+  },
+  methods: {
+    checkArticle() {
+      this.$emit('checkArticle')
     }
   }
 }
