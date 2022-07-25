@@ -1,11 +1,12 @@
 import request from '@/utils/request'
 // 获取文章的评论或文章的回复评论
-export const getArticleComment = (type, id) => {
+export const getArticleComment = (type, id, offset) => {
   return request({
     url: '/v1_0/comments',
     params: {
       type,
-      source: id
+      source: id,
+      offset
     }
   })
 }

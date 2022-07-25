@@ -20,7 +20,7 @@
       </div>
       <div class="right">
         <van-button
-          v-if="atricleInfo.is_followed"
+          v-if="!atricleInfo.is_followed"
           round
           type="info"
           @click="followFn(atricleInfo.aut_id)"
@@ -46,42 +46,51 @@
     </div>
     <!-- 文章评论列表 -->
     <div class="comment">
-      <div
-        class="comment-one"
-        v-for="(item, index) in articleComment"
-        :key="index"
+      <van-list
+        v-model="loading"
+        :finished="finished"
+        finished-text="没有更多了"
+        @load="onLoad"
+        offset="0"
+        :immediate-check="false"
       >
-        <div class="img">
-          <van-image round width="1rem" height="1rem" :src="item.aut_photo" />
-        </div>
-        <div class="commit-text">
-          <div class="left">
-            <div class="left-text">
-              <span>{{ item.aut_name }}</span>
-              <div class="mid">{{ item.content }}</div>
-              <span
-                ><i>{{ dayjs(item.pubdate).fromNow() }}</i>
-                <van-button
-                  @click="replyFn(item.com_id)"
-                  size="mini"
-                  round
-                  type="default"
-                  >回复{{ item.reply_count }}</van-button
-                ></span
+        <div
+          class="comment-one"
+          v-for="(item, index) in articleComment"
+          :key="index"
+        >
+          <div class="img">
+            <van-image round width="1rem" height="1rem" :src="item.aut_photo" />
+          </div>
+          <div class="commit-text">
+            <div class="left">
+              <div class="left-text">
+                <span>{{ item.aut_name }}</span>
+                <div class="mid">{{ item.content }}</div>
+                <span
+                  ><i>{{ dayjs(item.pubdate).fromNow() }}</i>
+                  <van-button
+                    @click="replyFn(item.com_id)"
+                    size="mini"
+                    round
+                    type="default"
+                    >回复{{ item.reply_count }}</van-button
+                  ></span
+                >
+              </div>
+            </div>
+            <div class="right">
+              <span v-if="!item.is_liking" @click="dianzanComment(item.com_id)"
+                ><van-icon name="good-job-o" /> 赞 {{ item.like_count }}</span
+              >
+              <span v-else @click="dianzanComment(item.com_id)"
+                ><van-icon color="red" name="good-job" /> 赞
+                {{ item.like_count }}</span
               >
             </div>
           </div>
-          <div class="right">
-            <span v-if="item.is_liking" @click="dianzanComment(item.com_id)"
-              ><van-icon name="good-job-o" /> 赞</span
-            >
-            <span v-else @click="dianzanComment(item.com_id)"
-              ><van-icon color="red" name="good-job" /> 赞</span
-            >
-          </div>
         </div>
-      </div>
-      <van-divider>没有更多了</van-divider>
+      </van-list>
     </div>
 
     <!-- 文章的回复评论 -->
@@ -222,7 +231,7 @@
       <!-- 收藏按钮切换 -->
       <van-icon
         color="#777"
-        v-if="iconShow_shoucang"
+        v-if="!atricleInfo.is_collected"
         @click="shoucangFn"
         name="star-o"
       />
@@ -230,13 +239,25 @@
 
       <!-- 点赞按钮切换 -->
       <van-icon
-        v-if="iconShow_dianzan"
+        v-if="atricleInfo.attitude <= 0"
         color="#777"
         name="good-job-o"
         @click="dianzanFn"
       />
       <van-icon v-else color="red" name="good-job" @click="dianzanFn" />
-      <van-icon name="share" color="#777777"></van-icon>
+
+      <!-- 点击展示分享按钮 -->
+      <van-icon
+        name="share"
+        color="#777777"
+        @click="showShare = true"
+      ></van-icon>
+      <van-share-sheet
+        class="show_show"
+        v-model="showShare"
+        title="立即分享给好友"
+        :options="options"
+      />
     </div>
   </div>
 </template>
@@ -266,14 +287,29 @@ export default {
       articleComment: [],
       show: false,
       show_reply: false,
-      iconShow_dianzan: true,
-      iconShow_shoucang: true,
+      showShare: false,
       message: '',
       message_reply: '',
       dayjs,
       comment_reply: false,
       comment_reply_top: {},
-      comment_reply_main: []
+      comment_reply_main: [],
+      options: [
+        [
+          { name: '微信', icon: 'wechat' },
+          { name: '朋友圈', icon: 'wechat-moments' },
+          { name: '微博', icon: 'weibo' },
+          { name: 'QQ', icon: 'qq' }
+        ],
+        [
+          { name: '复制链接', icon: 'link' },
+          { name: '分享海报', icon: 'poster' },
+          { name: '二维码', icon: 'qrcode' },
+          { name: '小程序码', icon: 'weapp-qrcode' }
+        ]
+      ],
+      loading: false,
+      finished: false
     }
   },
   created() {
@@ -295,7 +331,18 @@ export default {
     async getArticleComment() {
       const { data } = await getArticleComment('a', this.id)
       this.articleComment = data.data.results
-      console.log(this.articleComment)
+    },
+    async onLoad() {
+      // if()
+      const commentId =
+        this.articleComment[this.articleComment.length - 1].com_id
+      const { data } = await getArticleComment('a', this.id, commentId)
+      if (data.data.results.length <= 0) {
+        this.finished = true
+        return
+      }
+      this.articleComment.push(...data.data.results)
+      this.loading = false
     },
 
     // 对文章进行评论
@@ -316,26 +363,26 @@ export default {
 
     // 文章点赞
     dianzanFn() {
-      if (this.iconShow_dianzan) {
+      if (this.atricleInfo.attitude <= 0) {
         dianzanArticle(this.id)
-        this.iconShow_dianzan = false
+        this.atricleInfo.attitude = 1
         this.$toast.success('点赞成功')
       } else {
         removeDianzan(this.id)
-        this.iconShow_dianzan = true
+        this.atricleInfo.attitude = 0
         this.$toast.success('取消点赞成功')
       }
     },
 
     // 文章收藏
     shoucangFn() {
-      if (this.iconShow_shoucang) {
-        this.iconShow_shoucang = false
+      if (!this.atricleInfo.is_collected) {
         shoucangArticle(this.id)
+        this.atricleInfo.is_collected = true
         this.$toast.success('收藏成功')
       } else {
-        this.iconShow_shoucang = true
         removeShoucang(this.id)
+        this.atricleInfo.is_collected = false
         this.$toast.success('取消收藏成功')
       }
     },
@@ -364,27 +411,29 @@ export default {
     // 关注用户
     async followFn(id) {
       await following(id)
-      this.atricleInfo.is_followed = false
+      this.atricleInfo.is_followed = true
       this.$toast.success('关注成功')
     },
 
     // 取消关注用户
     async removefollowFn(id) {
       await removeFollow(id)
-      this.atricleInfo.is_followed = true
+      this.atricleInfo.is_followed = false
       this.$toast.success('取消关注成功')
     },
 
     // 点赞评论或取消点赞评论
     async dianzanComment(id) {
       const index = this.articleComment.findIndex((item) => item.com_id === id)
-      if (this.articleComment[index].is_liking) {
+      if (!this.articleComment[index].is_liking) {
         await dianzanComment(id)
-        this.articleComment[index].is_liking = false
+        this.articleComment[index].is_liking = true
+        this.articleComment[index].like_count++
         this.$toast.success('点赞成功')
       } else {
         await removeDianzanComment(id)
-        this.articleComment[index].is_liking = true
+        this.articleComment[index].is_liking = false
+        this.articleComment[index].like_count--
         this.$toast.success('取消点赞成功')
       }
     }
@@ -487,6 +536,10 @@ export default {
   border: 0;
   color: #6ba3d8;
  }
+ .show_show{
+  height:8.5rem;
+ }
+
 }
 .comment{
     padding:  0 32px 100px 32px;
